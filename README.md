@@ -1,34 +1,75 @@
-# World ID Next.js Template
-
-This is a template repository for creating a new project using Next.js, TailwindCSS, and the [World ID SDK](https://id.worldcoin.org). This template isn't intended for use cases that require on-chain verification, but rather for use cases that leverage off-chain web backend verification.
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-First, set the correct Node.js version using `nvm` and run the development server:
+First, run the development server:
 
 ```bash
-nvm use 20
-pnpm i && pnpm dev
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
-
-Copy `.env.example` to `.env.local` and add your World ID App ID and Action Name to the appropriate variables.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-This template includes a server action to verify the proof returned by the IDKit widget at `src/app/actions/verify.ts`. Edit this file to handle any backend functions you need to perform after the proof has been verified.
+## World ID Verification Setup
 
-You can start editing the client-side page by modifying `src/app/page.tsx`. The page auto-updates as you edit the file. Edit the `onSuccess` function to define frontend behavior once the proof has been verified.
+This application uses World ID verification via the Worldcoin Mini App. To set it up:
+
+1. Create an account on the [Worldcoin Developer Portal](https://developer.worldcoin.org/)
+2. Create a new App in the Developer Portal
+3. Create a new "Incognito Action" within your app for the verification
+   - Incognito Actions are a primitive of World ID and allow you to gate functionality behind a unique human check
+   - You can limit the number of times a user can perform an action
+4. Copy your app ID and update the `.env.local` file:
+   ```
+   NEXT_PUBLIC_WLD_APP_ID="app_YOUR_MINI_APP_ID_HERE"
+   NEXT_PUBLIC_WLD_ACTION_ID="tute-claim-action" # Or your custom action ID
+   ```
+5. Make sure you have the World App installed on your device to test the verification flow
+
+### Implementation Details
+
+The verification flow is triggered when clicking the "Verify to Claim" button, which will:
+
+1. Open the World App for verification
+2. Prompt the user to confirm the verification
+3. Send the proof to the backend for verification
+4. Upon successful verification, allow the user to claim TUTE tokens
+
+#### Event-Based Approach
+
+This implementation uses the event-based approach as recommended in the World ID documentation:
+
+1. We use `MiniKit.commands.verify()` instead of the async version to initiate the verification
+2. Event listeners are set up to handle the verification result:
+   ```javascript
+   document.addEventListener("miniapp-verify-action-success", handleSuccess);
+   document.addEventListener("miniapp-verify-action-error", handleError);
+   ```
+3. When a successful verification event is received, we then verify the proof on the backend
+
+This follows the exact implementation guidelines from the [World ID Verify Command documentation](https://docs.world.org/mini-apps/commands/verify).
 
 ## Learn More
 
-To learn more about Next.js and World ID, take a look at the following resources:
+To learn more about Next.js, take a look at the following resources:
 
--   [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
--   [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
--   [World ID Documentation](https://docs.worldcoin.org/) - learn about World ID features and API.
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+To learn more about World ID and Mini Apps:
+
+- [World ID Documentation](https://docs.world.org/)
+- [Mini Apps Quick Start](https://docs.world.org/mini-apps/quick-start)
+- [Verify Command Documentation](https://docs.world.org/mini-apps/commands/verify)
 
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
